@@ -203,4 +203,77 @@ def findVolume(self, frame, volBar, volPer):
 
     pass
 
+Create an instance of the HandDetector class
 
+detector = HandDetector()
+
+Load the video
+
+cap = cv2.VideoCapture("test.mp4")
+
+Initialize the volume bar and percentage
+volBar = 400
+# If the video ended, break the loop
+
+if not success:
+
+    break
+
+# Flip the frame horizontally for more natural movement
+
+frame = cv2.flip(frame, 1)
+
+# Find the position and landmarks of the left hand
+
+leftPos, leftLandmarks = detector.findPosition(frame, handNo=0, draw=False)
+
+# Find the position and landmarks of the right hand
+
+rightPos, rightLandmarks = detector.findPosition(frame, handNo=1, draw=False)
+
+# If both hands are detected, calculate the distance between the tips of the index fingers
+
+if leftPos and rightPos:
+
+    length, _ = detector.findDistance(leftPos[1:], rightPos[1:], frame)
+
+    # Map the length to a volume range of 50 to 500
+
+    vol = np.interp(length, [50, 250], [400, 0])
+
+    # Smooth the volume changes over 100 milliseconds
+
+    smoothness = 100
+
+    volPer = smoothness * volPer + (1 - smoothness) * vol
+
+    volBar = np.interp(volPer, [0, 400], [0, 400])
+
+    # Update the volume bar and percentage
+
+    cv2.rectangle(frame, (50, 150), (85, 400), (255, 0, 0), 3)
+
+    cv2.rectangle(frame, (50, int(volBar)), (85, 400), (255, 0, 0), cv2.FILLED)
+
+    cv2.putText(frame, f"{int(volPer)}%", (40, 450), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 3)
+
+# Display the resulting frame
+
+cv2.imshow("Frame", frame)
+
+# Exit the loop when 'q' is pressed
+
+if cv2.waitKey(1) == ord('q'):
+
+    break
+
+
+
+volPer = 0
+
+while True:
+
+success, frame = cap.read()
+Release the video capture and destroy all windows
+
+cap.release()
